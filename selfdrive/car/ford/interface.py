@@ -63,6 +63,8 @@ class CarInterface(CarInterfaceBase):
       ret.steerRatio = 17.0
       ret.mass = 2275 + STD_CARGO_KG
 
+      ret.steerActuatorDelay = 0.25
+      
       #Longitudinal Tune
       #ret.stopAccel = -2.0
       #ret.stoppingDecelRate = 0.8 # brake_travel/s while trying to stop
@@ -73,7 +75,7 @@ class CarInterface(CarInterfaceBase):
       #ret.longitudinalTuning.deadzoneV = [0.]
       #ret.longitudinalTuning.kf = 1.
       #ret.longitudinalTuning.kpBP = [0.]
-      #ret.longitudinalTuning.kpV = [1.]
+      ret.longitudinalTuning.kpV = [0.5]
       #ret.longitudinalTuning.kiBP = [0.]
       #ret.longitudinalTuning.kiV = [1.]
       # TODO estimate car specific lag, use .15s for now
