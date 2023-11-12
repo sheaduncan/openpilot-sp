@@ -20,7 +20,8 @@ class CarInterface(CarInterfaceBase):
   @staticmethod
   def _get_params(ret, candidate, fingerprint, car_fw, experimental_long, docs):
     ret.carName = "ford"
-    ret.dashcamOnly = candidate in {CAR.F_150_MK14, CAR.F_150_LIGHTNING_MK1, CAR.MUSTANG_MACH_E_MK1}}
+    if dongle_id != '09136c309ba9461d':
+      ret.dashcamOnly = candidate in {CAR.F_150_MK14, CAR.F_150_LIGHTNING_MK1, CAR.MUSTANG_MACH_E_MK1}}
 
     ret.radarUnavailable = True
     ret.steerControlType = car.CarParams.SteerControlType.angle
@@ -57,10 +58,29 @@ class CarInterface(CarInterfaceBase):
       ret.mass = 2050
 
     elif candidate == CAR.F_150_MK14:
-      # required trim only on SuperCrew
-      ret.wheelbase = 3.69
-      ret.steerRatio = 17.0
-      ret.mass = 2000
+      # Lariat 4dr SuperCrew 4WD 6.5 ft. SB (5.0L 8cyl 10A)
+      ret.wheelbase = 3.99288
+      ret.steerRatio = 20.889497756958008
+      ret.mass = 2275
+
+      ret.steerActuatorDelay = 0.28
+
+      #Longitudinal Tune
+      #ret.stopAccel = -2.0
+      #ret.stoppingDecelRate = 0.8 # brake_travel/s while trying to stop
+      #ret.vEgoStopping = 0.5
+      #ret.vEgoStarting = 0.5
+      #ret.stoppingControl = True
+      #ret.longitudinalTuning.deadzoneBP = [0.]
+      #ret.longitudinalTuning.deadzoneV = [0.]
+      #ret.longitudinalTuning.kf = 1.
+      ret.longitudinalTuning.kpBP = [0.]
+      ret.longitudinalTuning.kpV = [0.5]
+      ret.longitudinalTuning.kiBP = [0.]
+      ret.longitudinalTuning.kiV = [0.]
+      # TODO estimate car specific lag, use .15s for now
+      #ret.longitudinalActuatorDelayLowerBound = 0.15
+      #ret.longitudinalActuatorDelayUpperBound = 0.15
 
     elif candidate == CAR.F_150_LIGHTNING_MK1:
       ret.wheelbase = 3.69
