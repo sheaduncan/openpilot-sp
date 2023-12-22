@@ -1,5 +1,6 @@
 from cereal import car
-from openpilot.common.numpy_fast import clip
+from openpilot.common.numpy_fast import clip, interp
+from openpilot.common.conversions import Conversions as CV
 from opendbc.can.packer import CANPacker
 from openpilot.selfdrive.car import apply_std_steer_angle_limits
 from openpilot.selfdrive.car.ford import fordcan
@@ -20,6 +21,15 @@ def apply_ford_curvature_limits(apply_curvature, apply_curvature_last, current_c
 
   return clip(apply_curvature, -CarControllerParams.CURVATURE_MAX, CarControllerParams.CURVATURE_MAX)
 
+def hysteresis(current_value, old_value, target, stdDevLow: float, stdDevHigh: float):
+  if target - stdDevLow <= current_value <= target + stdDevHigh:
+    result = old_value
+  elif current_value < target - stdDevLow:
+    result = 1
+  elif current_value > target + stdDevHigh:
+    result = 0
+
+  return result
 
 class CarController:
   def __init__(self, dbc_name, CP, VM):
@@ -33,6 +43,22 @@ class CarController:
     self.main_on_last = False
     self.lkas_enabled_last = False
     self.steer_alert_last = False
+    self.brake_actuate_last = 0
+    self.precharge_actuate_last = 0
+
+    self.brake_actutator_target = -0.45
+    self.brake_actutator_stdDevLow = 0.05
+    self.brake_actutator_stdDevHigh = 0.45
+
+    self.precharge_actutator_target = -0.2
+    self.precharge_actutator_stdDevLow = 0.05
+    self.precharge_actutator_stdDevHigh = 0.2
+
+    self.gas_min = CarControllerParams.MIN_GAS
+    self.brake_min = CarControllerParams.MIN_GAS
+
+    self.brake_0_point = -0.1
+    self.brake_converge_at = -1.5
 
   def update(self, CC, CS, now_nanos):
     can_sends = []
@@ -85,12 +111,34 @@ class CarController:
     if self.CP.openpilotLongitudinalControl and (self.frame % CarControllerParams.ACC_CONTROL_STEP) == 0:
       # Both gas and accel are in m/s^2, accel is used solely for braking
       accel = clip(actuators.accel, CarControllerParams.ACCEL_MIN, CarControllerParams.ACCEL_MAX)
+
+      brake_actuate = False
+      precharge_actuate = False
+      
       gas = accel
       if not CC.longActive or gas < CarControllerParams.MIN_GAS:
         gas = CarControllerParams.INACTIVE_GAS
 
+      brake = accel
+      if brake < self.brake_min:
+        brake = interp(clip(brake, CarControllerParams.ACCEL_MIN, self.brake_min), [CarControllerParams.ACCEL_MIN, self.brake_converge_at, self.brake_min], [CarControllerParams.ACCEL_MIN, self.brake_converge_at, self.brake_0_point])    
+
+        if CC.longActive:
+          brake_actuate = precharge_actuate = True
+
       stopping = CC.actuators.longControlState == LongCtrlState.stopping
-      can_sends.append(fordcan.create_acc_msg(self.packer, self.CAN, CC.longActive, gas, accel, stopping))
+      # Calculate targetSpeed
+      targetSpeed = actuators.speed
+      if not CC.longActive and hud_control.setSpeed:
+        targetSpeed = hud_control.setSpeed
+
+      # brake_actuate = hysteresis(accel, self.brake_actuate_last, self.brake_actutator_target, self.brake_actutator_stdDevLow, self.brake_actutator_stdDevHigh)
+      # self.brake_actuate_last = brake_actuate
+
+      # precharge_actuate = hysteresis(accel, self.precharge_actuate_last, self.precharge_actutator_target, self.precharge_actutator_stdDevLow, self.precharge_actutator_stdDevHigh)
+      # self.precharge_actuate_last = precharge_actuate
+
+      can_sends.append(fordcan.create_acc_msg(self.packer, self.CAN, CC.longActive, gas, brake, stopping, brake_actuate, precharge_actuate, v_ego_kph=targetSpeed * CV.MS_TO_KPH))
 
     ### ui ###
     send_ui = (self.main_on_last != main_on) or (self.lkas_enabled_last != CC.latActive) or (self.steer_alert_last != steer_alert)
