@@ -127,6 +127,7 @@ class CarController:
           brake_actuate = precharge_actuate = True
 
       stopping = CC.actuators.longControlState == LongCtrlState.stopping
+      
       # Calculate targetSpeed
       targetSpeed = actuators.speed
       if not CC.longActive and hud_control.setSpeed:
