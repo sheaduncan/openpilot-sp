@@ -115,6 +115,28 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     locationdPermanentError @118;
     paramsdTemporaryError @50;
     paramsdPermanentError @119;
+    actuatorsApiUnavailable @120;
+    espActive @121;
+    manualSteeringRequired @122;
+    manualLongitudinalRequired @123;
+    silentPedalPressed @124;
+    silentButtonEnable @125;
+    silentBrakeHold @126;
+    silentWrongGear @127;
+    spReverseGear @128;
+    preKeepHandsOnWheel @129;
+    promptKeepHandsOnWheel @130;
+    keepHandsOnWheel @131;
+    speedLimitActive @132;
+    speedLimitValueChange @133;
+    e2eLongStop @134;
+    e2eLongStart @135;
+    controlsMismatchLong @136;
+    cruiseEngageBlocked @137;
+    laneChangeRoadEdge @138;
+    speedLimitPreActive @139;
+    speedLimitConfirmed @140;
+    torqueNNLoad @141;
     manualSteeringRequired @120;
     manualLongitudinalRequired @121;
     silentPedalPressed @122;
@@ -174,6 +196,7 @@ struct CarState {
   # CAN health
   canValid @26 :Bool;       # invalid counter/checksums
   canTimeout @40 :Bool;     # CAN bus dropped out
+  canErrorCounter @48 :UInt32;
 
   # car speed
   vEgo @1 :Float32;          # best estimate of speed
@@ -212,6 +235,7 @@ struct CarState {
   espDisabled @32 :Bool;
   accFaulted @42 :Bool;
   carFaultedNonCritical @47 :Bool;  # some ECU is faulted, but car remains controllable
+  espActive @51 :Bool;
 
   # cruise state
   cruiseState @10 :CruiseState;
@@ -232,16 +256,16 @@ struct CarState {
   # clutch (manual transmission only)
   clutchPressed @28 :Bool;
 
-  madsEnabled @48 :Bool;
-  leftBlinkerOn @49 :Bool;
-  rightBlinkerOn @50 :Bool;
-  disengageByBrake @51 :Bool;
-  belowLaneChangeSpeed @52 :Bool;
-  accEnabled @53 :Bool;
-  latActive @54 :Bool;
-  gapAdjustCruiseTr @55 :Int32;
-  endToEndLong @56 :Bool;
-  customStockLong @57 :CustomStockLong;
+  madsEnabled @52 :Bool;
+  leftBlinkerOn @53 :Bool;
+  rightBlinkerOn @54 :Bool;
+  disengageByBrake @55 :Bool;
+  belowLaneChangeSpeed @56 :Bool;
+  accEnabled @57 :Bool;
+  latActive @58 :Bool;
+  gapAdjustCruiseTr @59 :Int32;
+  endToEndLong @60 :Bool;
+  customStockLong @61 :CustomStockLong;
 
   struct CustomStockLong {
     cruiseButton @0 :Int16;
@@ -259,6 +283,9 @@ struct CarState {
 
   fuelGauge @41 :Float32; # battery or fuel tank level from 0.0 to 1.0
   charging @43 :Bool;
+
+  # process meta
+  cumLagMs @50 :Float32;
 
   struct WheelSpeeds {
     # optional wheel speeds
@@ -318,6 +345,7 @@ struct CarState {
   brakeLightsDEPRECATED @19 :Bool;
   steeringRateLimitedDEPRECATED @29 :Bool;
   canMonoTimesDEPRECATED @12: List(UInt64);
+  canRcvTimeoutDEPRECATED @49 :Bool;
 }
 
 # ******* radar state @ 20hz *******
@@ -557,7 +585,7 @@ struct CarParams {
 
   steerLimitAlert @28 :Bool;
   steerLimitTimer @47 :Float32;  # time before steerLimitAlert is issued
-
+  longitudinalActuatorDelay @58 :Float32; # Gas/Brake actuator delay in seconds
   vEgoStopping @29 :Float32; # Speed at which the car goes into stopping state
   vEgoStarting @59 :Float32; # Speed at which the car goes into starting state
   stoppingControl @31 :Bool; # Does the car allow full control even at lows speeds when stopping
@@ -569,6 +597,7 @@ struct CarParams {
   startingState @70 :Bool; # Does this car make use of special starting state
 
   steerActuatorDelay @36 :Float32; # Steering wheel actuator delay in seconds
+
   longitudinalActuatorDelayLowerBound @61 :Float32; # Gas/Brake actuator delay in seconds, lower bound
   longitudinalActuatorDelayUpperBound @58 :Float32; # Gas/Brake actuator delay in seconds, upper bound
   openpilotLongitudinalControl @37 :Bool; # is openpilot doing the longitudinal control?
@@ -623,8 +652,8 @@ struct CarParams {
     kiBP @2 :List(Float32);
     kiV @3 :List(Float32);
     kf @6 :Float32;
-    deadzoneBP @4 :List(Float32);
-    deadzoneV @5 :List(Float32);
+    deadzoneBPDEPRECATED @4 :List(Float32);
+    deadzoneVDEPRECATED @5 :List(Float32);
   }
 
   struct LateralINDITuning {
@@ -784,4 +813,5 @@ struct CarParams {
   brakeMaxVDEPRECATED @16 :List(Float32);
   directAccelControlDEPRECATED @30 :Bool;
   maxSteeringAngleDegDEPRECATED @54 :Float32;
+  longitudinalActuatorDelayLowerBoundDEPRECATEDDEPRECATED @61 :Float32;
 }
