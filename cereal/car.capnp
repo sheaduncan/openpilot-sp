@@ -137,26 +137,6 @@ struct CarEvent @0x9b1657f34caf3ad3 {
     speedLimitPreActive @139;
     speedLimitConfirmed @140;
     torqueNNLoad @141;
-    manualSteeringRequired @120;
-    manualLongitudinalRequired @121;
-    silentPedalPressed @122;
-    silentButtonEnable @123;
-    silentBrakeHold @124;
-    silentWrongGear @125;
-    spReverseGear @126;
-    preKeepHandsOnWheel @127;
-    promptKeepHandsOnWheel @128;
-    keepHandsOnWheel @129;
-    speedLimitActive @130;
-    speedLimitValueChange @131;
-    e2eLongStop @132;
-    e2eLongStart @133;
-    controlsMismatchLong @134;
-    cruiseEngageBlocked @135;
-    laneChangeRoadEdge @136;
-    speedLimitPreActive @137;
-    speedLimitConfirmed @138;
-    torqueNNLoad @139;
 
     radarCanErrorDEPRECATED @15;
     communityFeatureDisallowedDEPRECATED @62;
